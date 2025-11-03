@@ -1,0 +1,15 @@
+# Normalize line endings
+* text=auto
+
+# Treat common binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
+
+# Linguist hints (optional)
+*.cs linguist-language=C#
+*.puml linguist-language=PlantUML
+*.md linguist-documentation

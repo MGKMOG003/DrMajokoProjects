@@ -1,0 +1,124 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.PMDashboardViewModel
+
+@{
+    ViewData["Title"] = "Project Manager Dashboard";
+    var pmId = ViewBag.PMId as string;
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2>Project Manager Dashboard</h2>
+        <p class="text-muted">Manage your projects, timelines, and budgets</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Projects</h5>
+                <h2 class="mb-0">@Model.TotalProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Active Projects</h5>
+                <h2 class="mb-0">@Model.ActiveProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending Quotations</h5>
+                <h2 class="mb-0">@Model.PendingQuotations</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Overdue Tasks</h5>
+                <h2 class="mb-0">@Model.OverdueTasks</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Projects -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Projects</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Projects.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Project Name</th>
+                                    <th>Client</th>
+                                    <th>Budget</th>
+                                    <th>Spent</th>
+                                    <th>Status</th>
+                                    <th>Start Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var project in Model.Projects)
+                                {
+                                    var percentSpent = project.Budget > 0 ? (project.ActualSpent / project.Budget) * 100 : 0;
+                                    <tr>
+                                        <td><strong>@project.Name</strong></td>
+                                        <td>@project.ClientId</td>
+                                        <td>R @project.Budget.ToString("N2")</td>
+                                        <td>
+                                            <span class="@(percentSpent > 90 ? "text-danger" : percentSpent > 75 ? "text-warning" : "text-success")">
+                                                R @project.ActualSpent.ToString("N2")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@(project.Status == "Completed" ? "success" : project.Status == "In Progress" ? "primary" : "secondary")">
+                                                @project.Status
+                                            </span>
+                                        </td>
+                                        <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="Timeline" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-primary" title="Timeline">
+                                                    📅 Timeline
+                                                </a>
+                                                <a asp-action="Quotations" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-warning" title="Quotations">
+                                                    💰 Quotes
+                                                </a>
+                                                <a asp-action="BudgetManagement" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-info" title="Budget">
+                                                    📊 Budget
+                                                </a>
+                                                <a asp-action="ProjectDocuments" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-secondary" title="Documents">
+                                                    📁 Docs
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <p class="text-muted">No projects assigned yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

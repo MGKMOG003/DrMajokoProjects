@@ -1,0 +1,110 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ContractorTaskViewModel>
+
+@{
+    ViewData["Title"] = "My Tasks";
+    var contractorId = ViewBag.ContractorId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📋 My Tasks</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Dashboard" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Task Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Tasks</h6>
+                <h2 class="text-primary">@Model.Count</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Completed</h6>
+                <h2 class="text-success">@Model.Count(t => t.Status == "Done")</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h6 class="text-muted">In Progress</h6>
+                <h2 class="text-warning">@Model.Count(t => t.Status == "In Progress")</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Overdue</h6>
+                <h2 class="text-danger">@Model.Count(t => t.IsOverdue)</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<ul class="nav nav-tabs mb-3" id="taskTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all" type="button">
+            All (@Model.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#scheduled" type="button">
+            Scheduled (@Model.Count(t => t.Status == "Scheduled"))
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#inprogress" type="button">
+            In Progress (@Model.Count(t => t.Status == "In Progress"))
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#completed" type="button">
+            Completed (@Model.Count(t => t.Status == "Done"))
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#overdue" type="button">
+            Overdue (@Model.Count(t => t.IsOverdue && t.Status != "Done"))
+        </button>
+    </li>
+</ul>
+
+<!-- Task Lists -->
+<div class="tab-content">
+    <!-- All Tasks -->
+    <div class="tab-pane fade show active" id="all">
+        @await Html.PartialAsync("_TaskList", Model)
+    </div>
+
+    <!-- Scheduled Tasks -->
+    <div class="tab-pane fade" id="scheduled">
+        @await Html.PartialAsync("_TaskList", Model.Where(t => t.Status == "Scheduled").ToList())
+    </div>
+
+    <!-- In Progress Tasks -->
+    <div class="tab-pane fade" id="inprogress">
+        @await Html.PartialAsync("_TaskList", Model.Where(t => t.Status == "In Progress").ToList())
+    </div>
+
+    <!-- Completed Tasks -->
+    <div class="tab-pane fade" id="completed">
+        @await Html.PartialAsync("_TaskList", Model.Where(t => t.Status == "Done").ToList())
+    </div>
+
+    <!-- Overdue Tasks -->
+    <div class="tab-pane fade" id="overdue">
+        @await Html.PartialAsync("_TaskList", Model.Where(t => t.IsOverdue && t.Status != "Done").ToList())
+    </div>
+</div>

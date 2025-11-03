@@ -1,0 +1,141 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.CreateProjectViewModel
+
+@{
+    ViewData["Title"] = "Create New Project";
+    var clients = ViewBag.Clients as List<DrMajokoProjects.Web.Models.ViewModels.UserViewModel>;
+    var projectManagers = ViewBag.ProjectManagers as List<DrMajokoProjects.Web.Models.ViewModels.UserViewModel>;
+}
+
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Create New Project</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateProject" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label">Project Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g., Residential Complex - Phase 1" required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label">Project Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Detailed description of the project scope, objectives, and deliverables..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ClientId" class="form-label">Client <span class="text-danger">*</span></label>
+                            <select asp-for="ClientId" class="form-select" required>
+                                <option value="">-- Select Client --</option>
+                                @if (clients != null && clients.Any())
+                                {
+                                    @foreach (var client in clients)
+                                    {
+                                        <option value="@client.Id">@client.Name (@client.Email)</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="" disabled>No clients available</option>
+                                }
+                            </select>
+                            <span asp-validation-for="ClientId" class="text-danger"></span>
+                            @if (clients == null || !clients.Any())
+                            {
+                                <small class="text-muted">Please add clients first in User Management</small>
+                            }
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ProjectManagerId" class="form-label">Project Manager <span class="text-danger">*</span></label>
+                            <select asp-for="ProjectManagerId" class="form-select" required>
+                                <option value="">-- Select Project Manager --</option>
+                                @if (projectManagers != null && projectManagers.Any())
+                                {
+                                    @foreach (var pm in projectManagers)
+                                    {
+                                        <option value="@pm.Id">@pm.Name (@pm.Email)</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="" disabled>No project managers available</option>
+                                }
+                            </select>
+                            <span asp-validation-for="ProjectManagerId" class="text-danger"></span>
+                            @if (projectManagers == null || !projectManagers.Any())
+                            {
+                                <small class="text-muted">Please add project managers first in User Management</small>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="Budget" class="form-label">Total Budget (R) <span class="text-danger">*</span></label>
+                            <input asp-for="Budget" class="form-control" type="number" step="0.01" min="0" placeholder="500000.00" required />
+                            <span asp-validation-for="Budget" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="StartDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input asp-for="StartDate" class="form-control" type="date" required />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="EndDate" class="form-label">End Date (Optional)</label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Note:</strong> After creating the project, you can add project phases, assign contractors, and upload documents from the project details page.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Create Project
+                            </button>
+                            <a asp-action="Projects" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Set today as minimum start date
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[type="date"][name="StartDate"]').setAttribute('min', today);
+
+            // Set end date minimum to start date value
+            document.querySelector('input[type="date"][name="StartDate"]').addEventListener('change', function() {
+                document.querySelector('input[type="date"][name="EndDate"]').setAttribute('min', this.value);
+            });
+        });
+    </script>
+}

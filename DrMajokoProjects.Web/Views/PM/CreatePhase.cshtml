@@ -1,0 +1,86 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.CreatePhaseViewModel
+
+@{
+    ViewData["Title"] = "Create Phase";
+    var project = ViewBag.Project as DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel;
+    var pmId = ViewBag.PMId as string;
+    var nextOrderIndex = ViewBag.NextOrderIndex as int?;
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Create New Phase for @project.Name</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreatePhase" asp-route-pmId="@pmId" method="post">
+                    <input type="hidden" asp-for="ProjectId" value="@project.Id" />
+                    <input type="hidden" asp-for="OrderIndex" value="@nextOrderIndex" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Phase Name <span class="text-danger">*</span></label>
+                        <input asp-for="PhaseName" class="form-control" placeholder="e.g., Foundation, Structure, Finishing" required />
+                        <span asp-validation-for="PhaseName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phase Budget (R) <span class="text-danger">*</span></label>
+                        <input asp-for="PhaseBudget" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" required />
+                        <small class="text-muted">Total Project Budget: R @project.Budget.ToString("N2")</small>
+                        <span asp-validation-for="PhaseBudget" class="text-danger"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Start Date <span class="text-danger">*</span></label>
+                            <input asp-for="EstimatedStartDate"
+                                   class="form-control"
+                                   type="date"
+                                   value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   required />
+                            <span asp-validation-for="EstimatedStartDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated End Date <span class="text-danger">*</span></label>
+                            <input asp-for="EstimatedEndDate"
+                                   class="form-control"
+                                   type="date"
+                                   value="@DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd")"
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   required />
+                            <span asp-validation-for="EstimatedEndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>💡 Tip:</strong> Break your project into logical phases like Foundation, Structure, Electrical, Plumbing, and Finishing for better tracking.
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">✓ Create Phase</button>
+                        <a asp-action="Timeline" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-secondary">✗ Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Validate end date is after start date
+        document.querySelector('input[name="EstimatedStartDate"]').addEventListener('change', function() {
+            var startDate = this.value;
+            var endDateInput = document.querySelector('input[name="EstimatedEndDate"]');
+            endDateInput.min = startDate;
+
+            if (endDateInput.value && endDateInput.value < startDate) {
+                endDateInput.value = startDate;
+            }
+        });
+    </script>
+}

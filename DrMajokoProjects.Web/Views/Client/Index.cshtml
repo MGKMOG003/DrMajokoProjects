@@ -1,0 +1,186 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ClientDashboardViewModel
+
+@{
+    ViewData["Title"] = "Client Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2>Welcome to Your Dashboard</h2>
+        <p class="text-muted">Manage your projects and maintenance requests</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Projects</h5>
+                <h2 class="mb-0">@Model.TotalProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Active Projects</h5>
+                <h2 class="mb-0">@Model.ActiveProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending Requests</h5>
+                <h2 class="mb-0">@Model.PendingRequests</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Completed Requests</h5>
+                <h2 class="mb-0">@Model.CompletedRequests</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a asp-action="SubmitMaintenance" asp-route-clientId="@Model.ClientId" class="btn btn-lg btn-outline-primary w-100">
+                            📝 Submit Maintenance Request
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a asp-action="MyProjects" asp-route-clientId="@Model.ClientId" class="btn btn-lg btn-outline-success w-100">
+                            🏗️ View My Projects
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a asp-action="MyMaintenanceRequests" asp-route-clientId="@Model.ClientId" class="btn btn-lg btn-outline-info w-100">
+                            🔧 My Maintenance Requests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Projects -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Projects</h5>
+                <a asp-action="MyProjects" asp-route-clientId="@Model.ClientId" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                @if (Model.Projects.Any())
+                {
+                    <div class="row">
+                        @foreach (var project in Model.Projects.Take(3))
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@project.Name</h5>
+                                        <p class="card-text text-muted">@(project.Description?.Length > 60 ? project.Description.Substring(0, 60) + "..." : project.Description)</p>
+                                        <span class="badge bg-@(project.Status == "Completed" ? "success" : "primary")">@project.Status</span>
+                                        <hr />
+                                        <p class="mb-1"><strong>Budget:</strong> R @project.Budget.ToString("N2")</p>
+                                        <p class="mb-3"><strong>Spent:</strong> R @project.ActualSpent.ToString("N2")</p>
+                                        <a asp-action="ProjectDetails" asp-route-id="@project.Id" asp-route-clientId="@Model.ClientId" class="btn btn-sm btn-outline-primary w-100">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <p class="text-muted">No projects yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Maintenance Requests -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Maintenance Requests</h5>
+                <a asp-action="MyMaintenanceRequests" asp-route-clientId="@Model.ClientId" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentMaintenanceRequests.Any())
+                {
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.RecentMaintenanceRequests)
+                            {
+                                <tr>
+                                    <td>@request.Title</td>
+                                    <td>
+                                        <span class="badge bg-@(request.Priority == "Urgent" ? "danger" : request.Priority == "High" ? "warning" : "info")">
+                                            @request.Priority
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(request.Status == "Completed" ? "success" : request.Status == "In Progress" ? "primary" : "secondary")">
+                                            @request.Status
+                                        </span>
+                                    </td>
+                                    <td>@request.CreatedAt.ToString("dd MMM yyyy")</td>
+                                    <td>
+                                        <a asp-action="MaintenanceDetails" asp-route-id="@request.Id" asp-route-clientId="@Model.ClientId" class="btn btn-sm btn-outline-info">View</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-3">No maintenance requests yet.</p>
+                        <a asp-action="SubmitMaintenance" asp-route-clientId="@Model.ClientId" class="btn btn-primary">Submit Your First Request</a>
+                    </div>
+                }
+                <!-- Update the Quick Actions section to include this button -->
+                <div class="col-md-3 mb-3">
+                    <a asp-action="MyChats" asp-route-clientId="@Model.ClientId" class="btn btn-lg btn-outline-warning w-100">
+                        💬 Project Chats
+                        @if (Model.PendingRequests > 0)
+                        {
+                            <span class="badge bg-danger">@Model.PendingRequests</span>
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

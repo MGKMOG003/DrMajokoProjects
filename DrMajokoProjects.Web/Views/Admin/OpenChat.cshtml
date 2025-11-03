@@ -1,0 +1,64 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.MessageViewModel>
+
+@{
+    ViewData["Title"] = "Chat - " + ViewBag.Project.Name;
+    var project = ViewBag.Project as DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel;
+}
+
+<h2>Chat: @project.Name</h2>
+<a asp-action="ChatList" class="btn btn-secondary mb-3">← Back to Chat List</a>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body" style="height: 500px; overflow-y: scroll;" id="chatContainer">
+                @await Html.PartialAsync("_MessagePartial", Model)
+            </div>
+            <div class="card-footer">
+                <form asp-action="SendMessage" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ProjectId" value="@project.Id" />
+                    <input type="hidden" name="SenderId" value="admin-001" />
+                    <input type="hidden" name="SenderName" value="Admin" />
+
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <textarea name="MessageText" class="form-control" rows="2" placeholder="Type a message..."></textarea>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="file" name="Attachment" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh messages every 3 seconds
+        let lastMessageTime = new Date('@(Model.LastOrDefault()?.CreatedAt.ToString("o") ?? DateTime.UtcNow.ToString("o"))');
+
+        setInterval(async function() {
+            const response = await fetch(`/Admin/GetNewMessages?projectId=@project.Id&lastMessageTime=${lastMessageTime.toISOString()}`);
+            const html = await response.text();
+
+            if (html.trim()) {
+                document.getElementById('chatContainer').innerHTML += html;
+                lastMessageTime = new Date();
+                // Scroll to bottom
+                const container = document.getElementById('chatContainer');
+                container.scrollTop = container.scrollHeight;
+            }
+        }, 3000);
+
+        // Scroll to bottom on load
+        window.onload = function() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        };
+    </script>
+}

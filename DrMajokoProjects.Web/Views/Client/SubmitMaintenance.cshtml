@@ -1,0 +1,86 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.CreateMaintenanceRequestViewModel
+
+@{
+    ViewData["Title"] = "Submit Maintenance Request";
+    var projects = ViewBag.Projects as List<DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel>;
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Submit Maintenance Request</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="SubmitMaintenance" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ClientId" value="@clientId" />
+
+                    <div class="mb-3">
+                        <label asp-for="ProjectId" class="form-label">Select Project <span class="text-danger">*</span></label>
+                        <select asp-for="ProjectId" class="form-select" required>
+                            <option value="">-- Select a project --</option>
+                            @if (projects != null && projects.Any())
+                            {
+                                @foreach (var project in projects)
+                                {
+                                    <option value="@project.Id">@project.Name</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ProjectId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Issue Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g., Leaking roof in bedroom" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"
+                                  placeholder="Please describe the issue in detail. Include location, when it started, and any other relevant information..." required></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Priority" class="form-label">Priority Level <span class="text-danger">*</span></label>
+                        <select asp-for="Priority" class="form-select" required>
+                            <option value="Low">Low - Can wait</option>
+                            <option value="Medium" selected>Medium - Should be fixed soon</option>
+                            <option value="High">High - Needs attention</option>
+                            <option value="Urgent">Urgent - Immediate attention required</option>
+                        </select>
+                        <span asp-validation-for="Priority" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Upload Photos/Videos (Optional)</label>
+                        <input type="file" name="Photos" class="form-control" multiple accept="image/*,video/*" />
+                        <small class="text-muted">You can upload multiple photos or videos to help us understand the issue better.</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>What happens next?</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>Your request will be reviewed by our team</li>
+                            <li>We'll assign a qualified contractor</li>
+                            <li>The contractor will contact you to schedule a visit</li>
+                            <li>You'll receive updates on the progress</li>
+                        </ol>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Request</button>
+                        <a asp-action="Index" asp-route-clientId="@clientId" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Dr Majoko Projects</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    🏗️ Dr Majoko Projects
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    @{
+                        var userId = Context.Session.GetString("UserId");
+                        var userRole = Context.Session.GetString("UserRole");
+                        var userName = Context.Session.GetString("UserName");
+                    }
+
+                    @if (!string.IsNullOrEmpty(userId))
+                    {
+                        <ul class="navbar-nav flex-grow-1">
+                            <!-- Admin Menu -->
+                            @if (userRole == "Admin")
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                        👨‍💼 Admin
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="AuthRole">User Management</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Projects">Projects</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ChatList">Messages</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ReportPanel">Reports</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="AuditLog">Audit Logs</a></li>
+                                    </ul>
+                                </li>
+                            }
+
+                            <!-- Project Manager Menu -->
+                            @if (userRole == "Project Manager" || userRole == "Admin")
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="pmDropdown" role="button" data-bs-toggle="dropdown">
+                                        📊 Project Manager
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="pmDropdown">
+                                        <li><a class="dropdown-item" asp-controller="PM" asp-action="Dashboard">Dashboard</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="PM" asp-action="Index">My Projects</a></li>
+                                        <li><a class="dropdown-item" asp-controller="PM" asp-action="Quotations">Quotations</a></li>
+                                    </ul>
+                                </li>
+                            }
+
+                            <!-- Contractor Menu -->
+                            @if (userRole == "Contractor" || userRole == "Admin")
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="contractorDropdown" role="button" data-bs-toggle="dropdown">
+                                        🔧 Contractor
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="contractorDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Contractor" asp-action="Dashboard">Dashboard</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Contractor" asp-action="Tasks">My Tasks</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Contractor" asp-action="Quotations">My Quotations</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Contractor" asp-action="Performance">Performance</a></li>
+                                    </ul>
+                                </li>
+                            }
+
+                            <!-- Client Menu -->
+                            @if (userRole == "Client" || userRole == "Admin")
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="clientDropdown" role="button" data-bs-toggle="dropdown">
+                                        👤 Client
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="clientDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Client" asp-action="Dashboard">Dashboard</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Client" asp-action="Projects">My Projects</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Client" asp-action="Maintenance">Maintenance Requests</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+
+                        <!-- User Info & Logout -->
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    👤 @userName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><h6 class="dropdown-header">@userRole</h6></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                🚪 Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Alert Messages -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>✓ Success!</strong> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>✗ Error!</strong> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>⚠️ Warning!</strong> @TempData["Warning"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - Dr Majoko Projects - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

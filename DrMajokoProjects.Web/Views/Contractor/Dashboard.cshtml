@@ -1,0 +1,270 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ContractorDashboardViewModel
+
+@{
+    ViewData["Title"] = "Contractor Dashboard";
+    var contractorId = ViewBag.ContractorId as string;
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2>🔧 Contractor Dashboard</h2>
+        <p class="text-muted">Welcome back, @Model.ContractorName</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Tasks</h6>
+                <h2>@Model.TotalTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Completed</h6>
+                <h2>@Model.CompletedTasks</h2>
+                <small>@((Model.TotalTasks > 0 ? (double)Model.CompletedTasks / Model.TotalTasks * 100 : 0).ToString("F1"))%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6>In Progress</h6>
+                <h2>@Model.InProgressTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>Delayed</h6>
+                <h2>@Model.DelayedTasks</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Overview -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Overall Performance</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart"></canvas>
+                <div class="mt-3">
+                    <p><strong>Completion Rate:</strong> @Model.OverallPerformance.CompletionRate.ToString("F1")%</p>
+                    <p><strong>On-Time Tasks:</strong> @Model.OverallPerformance.TotalTasksOnTime / @Model.OverallPerformance.TotalTasksCompleted</p>
+                    <p><strong>Average Delay:</strong> @Model.OverallPerformance.AverageDelayDays.ToString("F1") days</p>
+                    <p><strong>Client Rating:</strong> ⭐ @Model.AverageRating.ToString("F1") / 5.0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Phase Performance</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="phasePerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a asp-action="Tasks" asp-route-contractorId="@contractorId" class="btn btn-primary btn-lg w-100">
+                            📋 View All Tasks
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId" class="btn btn-success btn-lg w-100">
+                            💰 Submit Quotation
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="Quotations" asp-route-contractorId="@contractorId" class="btn btn-warning btn-lg w-100">
+                            📄 My Quotations
+                            @if (Model.PendingQuotations > 0)
+                            {
+                                <span class="badge bg-danger">@Model.PendingQuotations</span>
+                            }
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="Performance" asp-route-contractorId="@contractorId" class="btn btn-info btn-lg w-100">
+                            📊 Performance Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assigned Projects -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Projects</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AssignedProjects.Any())
+                {
+                    <div class="row">
+                        @foreach (var project in Model.AssignedProjects)
+                        {
+                            var projectTasks = Model.AllTasks.Where(t => t.ProjectId == project.Id).ToList();
+                            var completedTasks = projectTasks.Count(t => t.Status == "Done");
+                            var progress = projectTasks.Any() ? (double)completedTasks / projectTasks.Count * 100 : 0;
+
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@project.Name</h5>
+                                        <p class="card-text text-muted">@project.Location</p>
+                                        <div class="progress mb-2" style="height: 25px;">
+                                            <div class="progress-bar" style="width: @progress%">
+                                                @progress.ToString("F0")%
+                                            </div>
+                                        </div>
+                                        <p class="mb-1"><strong>Tasks:</strong> @completedTasks / @projectTasks.Count</p>
+                                        <p class="mb-1"><strong>Status:</strong> <span class="badge bg-primary">@project.Status</span></p>
+                                        <a asp-action="Tasks" asp-route-contractorId="@contractorId" class="btn btn-sm btn-primary mt-2">
+                                            View Tasks
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        No projects assigned yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Quotations -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Quotations</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentQuotations.Any())
+                {
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Task</th>
+                                <th>Amount</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var quote in Model.RecentQuotations)
+                            {
+                                <tr>
+                                    <td>@quote.TaskName</td>
+                                    <td>R @quote.TotalAmount.ToString("N2")</td>
+                                    <td>@quote.SubmittedAt.ToString("dd MMM yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-@(quote.Status == "Approved" ? "success" : quote.Status == "Rejected" ? "danger" : "warning")">
+                                            @quote.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="QuotationDetails" asp-route-id="@quote.Id" asp-route-contractorId="@contractorId" class="btn btn-sm btn-info">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        No quotations submitted yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Performance Chart
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(perfCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['On Track', 'Delayed', 'In Progress'],
+                datasets: [{
+                    data: [@Model.OverallPerformance.OnTrackPercentage, @Model.OverallPerformance.DelayedPercentage, @Model.OverallPerformance.InProgressPercentage],
+                    backgroundColor: ['#198754', '#dc3545', '#ffc107']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Phase Performance Chart
+        const phaseCtx = document.getElementById('phasePerformanceChart').getContext('2d');
+        new Chart(phaseCtx, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.PhasePerformances.Select(p => $"'{p.PhaseName}'")))],
+                datasets: [{
+                    label: 'Completed',
+                    data: [@string.Join(",", Model.PhasePerformances.Select(p => p.CompletedTasks))],
+                    backgroundColor: '#198754'
+                }, {
+                    label: 'Remaining',
+                    data: [@string.Join(",", Model.PhasePerformances.Select(p => p.TotalTasks - p.CompletedTasks))],
+                    backgroundColor: '#6c757d'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                }
+            }
+        });
+    </script>
+}

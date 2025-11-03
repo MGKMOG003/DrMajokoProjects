@@ -1,0 +1,63 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.UserViewModel>
+
+@{
+    ViewData["Title"] = "User Role Management";
+}
+
+<h2>User Role Management</h2>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr class="@(user.Status == "Pending" ? "table-warning" : "")">
+                        <td>@user.Name</td>
+                        <td>@user.Email</td>
+                        <td>
+                            <form asp-action="UpdateUserRole" method="post" class="d-inline">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                                    <option value="Project Manager" selected="@(user.Role == "Project Manager")">Project Manager</option>
+                                    <option value="Contractor" selected="@(user.Role == "Contractor")">Contractor</option>
+                                    <option value="Client" selected="@(user.Role == "Client")">Client</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td>
+                            <span class="badge bg-@(user.Status == "Approved" ? "success" : user.Status == "Pending" ? "warning" : "danger")">
+                                @user.Status
+                            </span>
+                        </td>
+                        <td>@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td>
+                            @if (user.Status == "Pending")
+                            {
+                                <form asp-action="ApproveUser" method="post" class="d-inline">
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-action="DenyUser" method="post" class="d-inline">
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Deny</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

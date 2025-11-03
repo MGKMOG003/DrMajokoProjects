@@ -1,0 +1,72 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel>
+
+@{
+    ViewData["Title"] = "My Projects";
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>My Projects</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Index" asp-route-clientId="@clientId" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    @if (Model.Any())
+    {
+        @foreach (var project in Model)
+        {
+            var percentSpent = project.Budget > 0 ? (project.ActualSpent / project.Budget) * 100 : 0;
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">@project.Name</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">@project.Description</p>
+
+                        <div class="mb-3">
+                            <strong>Status:</strong>
+                            <span class="badge bg-@(project.Status == "Completed" ? "success" : project.Status == "In Progress" ? "primary" : "secondary")">
+                                @project.Status
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Timeline:</strong><br />
+                            <small>Start: @project.StartDate.ToString("dd MMM yyyy")</small><br />
+                            <small>End: @(project.EndDate?.ToString("dd MMM yyyy") ?? "Ongoing")</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Budget Progress:</strong>
+                            <div class="progress mt-2" style="height: 25px;">
+                                <div class="progress-bar @(percentSpent > 90 ? "bg-danger" : percentSpent > 70 ? "bg-warning" : "bg-success")"
+                                     style="width: @percentSpent%">
+                                    @percentSpent.ToString("F1")%
+                                </div>
+                            </div>
+                            <small class="text-muted">R @project.ActualSpent.ToString("N2") of R @project.Budget.ToString("N2")</small>
+                        </div>
+
+                        <a asp-action="ProjectDetails" asp-route-id="@project.Id" asp-route-clientId="@clientId" class="btn btn-primary w-100">
+                            View Full Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <h4>No projects found</h4>
+                <p>You don't have any projects yet. Contact us to start your first project!</p>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,274 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.PhaseReportViewModel
+
+@{
+    ViewData["Title"] = "Phase Report";
+    var pmId = ViewBag.PMId as string;
+    var projectId = ViewBag.ProjectId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📊 Phase Report: @Model.Phase.PhaseName</h2>
+    </div>
+    <div class="col text-end">
+        <button onclick="window.print()" class="btn btn-success">
+            🖨️ Print Report
+        </button>
+        <a asp-action="Timeline" asp-route-projectId="@projectId" asp-route-pmId="@pmId" class="btn btn-secondary">
+            ← Back to Timeline
+        </a>
+    </div>
+</div>
+
+<!-- Phase Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Tasks</h6>
+                <h2>@Model.TotalTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Completed Tasks</h6>
+                <h2>@Model.CompletedTasks</h2>
+                <small>@((Model.TotalTasks > 0 ? (double)Model.CompletedTasks / Model.TotalTasks * 100 : 0).ToString("F1"))%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>On Time</h6>
+                <h2>@Model.OnTimeTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>Delayed</h6>
+                <h2>@Model.DelayedTasks</h2>
+                <small>Avg: @Model.AverageDelayDays.ToString("F1") days</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phase Information -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Phase Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-6">Phase Name:</dt>
+                            <dd class="col-sm-6">@Model.Phase.PhaseName</dd>
+
+                            <dt class="col-sm-6">Status:</dt>
+                            <dd class="col-sm-6">
+                                <span class="badge bg-@(Model.Phase.Status == "Done" ? "success" : Model.Phase.Status == "In Progress" ? "primary" : "secondary")">
+                                    @Model.Phase.Status
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-6">Estimated Start:</dt>
+                            <dd class="col-sm-6">@Model.Phase.EstimatedStartDate.ToString("dd MMMM yyyy")</dd>
+
+                            <dt class="col-sm-6">Estimated End:</dt>
+                            <dd class="col-sm-6">@Model.Phase.EstimatedEndDate.ToString("dd MMMM yyyy")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-6">Phase Budget:</dt>
+                            <dd class="col-sm-6">R @Model.Phase.PhaseBudget.ToString("N2")</dd>
+
+                            <dt class="col-sm-6">Amount Spent:</dt>
+                            <dd class="col-sm-6">R @Model.Phase.PhaseCost.ToString("N2")</dd>
+
+                            <dt class="col-sm-6">Remaining:</dt>
+                            <dd class="col-sm-6">
+                                <span class="@(Model.Phase.RemainingBudget < 0 ? "text-danger" : "text-success")">
+                                    R @Model.Phase.RemainingBudget.ToString("N2")
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-6">Budget Used:</dt>
+                            <dd class="col-sm-6">@Model.Phase.PercentageUsed.ToString("F1")%</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Analysis -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Time Analysis</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="timeComparisonChart"></canvas>
+                <div class="mt-3">
+                    <p><strong>Estimated Duration:</strong> @Model.TotalEstimatedDays days</p>
+                    <p><strong>Actual Duration:</strong> @Model.TotalActualDays days</p>
+                    <p>
+                        <strong>Variance:</strong>
+                        <span class="@(Model.TotalActualDays > Model.TotalEstimatedDays ? "text-danger" : "text-success")">
+                            @(Model.TotalActualDays - Model.TotalEstimatedDays) days
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Task Completion Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="completionStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Details Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Task Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Contractor</th>
+                                <th>Estimated Start</th>
+                                <th>Estimated End</th>
+                                <th>Actual Start</th>
+                                <th>Actual End</th>
+                                <th>Days Late</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model.Tasks)
+                            {
+                                <tr class="@(task.DaysLate > 0 && task.Status == "Done" ? "table-warning" : task.IsOverdue && task.Status != "Done" ? "table-danger" : "")">
+                                    <td><strong>@task.TaskName</strong></td>
+                                    <td>@task.AssignedContractorName</td>
+                                    <td>@task.EstimatedStartDate.ToString("dd MMM yyyy")</td>
+                                    <td>@task.EstimatedEndDate.ToString("dd MMM yyyy")</td>
+                                    <td>@(task.ActualStartDate?.ToString("dd MMM yyyy") ?? "-")</td>
+                                    <td>@(task.ActualEndDate?.ToString("dd MMM yyyy") ?? "-")</td>
+                                    <td>
+                                        @if (task.Status == "Done" && task.DaysLate > 0)
+                                        {
+                                            <span class="text-danger">+@task.DaysLate days</span>
+                                        }
+                                        else if (task.Status == "Done")
+                                        {
+                                            <span class="text-success">On Time</span>
+                                        }
+                                        else if (task.IsOverdue)
+                                        {
+                                            <span class="text-danger">Overdue</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>R @task.ActualCost.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge bg-@(task.Status == "Done" ? "success" : task.Status == "In Progress" ? "primary" : task.Status == "Delayed" ? "danger" : "secondary")">
+                                            @task.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <td colspan="7"><strong>TOTAL</strong></td>
+                                <td><strong>R @Model.Tasks.Sum(t => t.ActualCost).ToString("N2")</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Time Comparison Chart
+        const timeCtx = document.getElementById('timeComparisonChart').getContext('2d');
+        new Chart(timeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Estimated vs Actual Time'],
+                datasets: [{
+                    label: 'Estimated Days',
+                    data: [@Model.TotalEstimatedDays],
+                    backgroundColor: '#0d6efd'
+                }, {
+                    label: 'Actual Days',
+                    data: [@Model.TotalActualDays],
+                    backgroundColor: '@(Model.TotalActualDays > Model.TotalEstimatedDays ? "#dc3545" : "#198754")'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Completion Status Chart
+        const statusCtx = document.getElementById('completionStatusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed On Time', 'Completed Late', 'In Progress'],
+                datasets: [{
+                    data: [@Model.OnTimeTasks, @Model.DelayedTasks, @(Model.TotalTasks - Model.CompletedTasks)],
+                    backgroundColor: ['#198754', '#ffc107', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    @@media print {
+        .btn, .card-header {
+            display: none !important;
+        }
+    }
+</style>

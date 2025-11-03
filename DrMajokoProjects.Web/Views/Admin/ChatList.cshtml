@@ -1,0 +1,30 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ChatProjectViewModel>
+
+@{
+    ViewData["Title"] = "Project Chats";
+}
+
+<h2>Project Chats</h2>
+
+<div class="row mt-4">
+    @foreach (var chat in Model)
+    {
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@chat.ProjectName</h5>
+                    @if (chat.UnreadCount > 0)
+                    {
+                        <span class="badge bg-danger">@chat.UnreadCount unread</span>
+                    }
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Last message: @(chat.LastMessageTime == DateTime.MinValue ? "No messages" : chat.LastMessageTime.ToString("dd MMM yyyy HH:mm"))
+                        </small>
+                    </p>
+                    <a asp-action="OpenChat" asp-route-projectId="@chat.ProjectId" class="btn btn-primary">Open Chat</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

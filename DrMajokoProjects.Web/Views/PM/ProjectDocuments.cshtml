@@ -1,0 +1,113 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.DocumentViewModel>
+
+@{
+    ViewData["Title"] = "Project Documents";
+    var project = ViewBag.Project as DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel;
+    var pmId = ViewBag.PMId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📁 Project Documents: @project.Name</h2>
+    </div>
+    <div class="col text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            ⬆️ Upload Document
+        </button>
+        <a asp-action="Timeline" asp-route-projectId="@project.Id" asp-route-pmId="@pmId" class="btn btn-secondary">
+            ← Back
+        </a>
+    </div>
+</div>
+
+<!-- Document Categories -->
+<div class="row mb-4">
+    <div class="col-12">
+        <ul class="nav nav-tabs" id="documentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all" type="button">
+                    All Documents (@Model.Count)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#contracts" type="button">
+                    Contracts (@Model.Count(d => d.FileType.Contains("contract", StringComparison.OrdinalIgnoreCase)))
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#blueprints" type="button">
+                    Blueprints (@Model.Count(d => d.FileType.Contains("blueprint", StringComparison.OrdinalIgnoreCase) || d.FileName.EndsWith(".dwg")))
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#invoices" type="button">
+                    Invoices (@Model.Count(d => d.FileType.Contains("invoice", StringComparison.OrdinalIgnoreCase)))
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reports" type="button">
+                    Reports (@Model.Count(d => d.FileType.Contains("report", StringComparison.OrdinalIgnoreCase)))
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Document List -->
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="all">
+        @await Html.PartialAsync("_DocumentList", Model)
+    </div>
+    <div class="tab-pane fade" id="contracts">
+        @await Html.PartialAsync("_DocumentList", Model.Where(d => d.FileType.Contains("contract", StringComparison.OrdinalIgnoreCase)).ToList())
+    </div>
+    <div class="tab-pane fade" id="blueprints">
+        @await Html.PartialAsync("_DocumentList", Model.Where(d => d.FileType.Contains("blueprint", StringComparison.OrdinalIgnoreCase) || d.FileName.EndsWith(".dwg")).ToList())
+    </div>
+    <div class="tab-pane fade" id="invoices">
+        @await Html.PartialAsync("_DocumentList", Model.Where(d => d.FileType.Contains("invoice", StringComparison.OrdinalIgnoreCase)).ToList())
+    </div>
+    <div class="tab-pane fade" id="reports">
+        @await Html.PartialAsync("_DocumentList", Model.Where(d => d.FileType.Contains("report", StringComparison.OrdinalIgnoreCase)).ToList())
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="UploadDocument" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="projectId" value="@project.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <select name="fileType" class="form-select" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Blueprint">Blueprint</option>
+                            <option value="Invoice">Invoice</option>
+                            <option value="Report">Report</option>
+                            <option value="Permit">Permit</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Select File</label>
+                        <input type="file" name="file" class="form-control" required />
+                        <small class="text-muted">Max file size: 10MB. Supported: PDF, DOCX, DWG, JPG, PNG</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

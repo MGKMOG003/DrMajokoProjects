@@ -1,0 +1,99 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ReportViewModel
+
+@{
+    ViewData["Title"] = "Reports & Analytics";
+}
+
+<h2>Reports & Analytics</h2>
+
+<!-- Project Budget Summary -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Project Budget Summary</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Project Name</th>
+                    <th>Total Budget</th>
+                    <th>Amount Spent</th>
+                    <th>Remaining</th>
+                    <th>% Spent</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var summary in Model.ProjectSummaries)
+                {
+                    <tr>
+                        <td>@summary.ProjectName</td>
+                        <td>R @summary.TotalBudget.ToString("N2")</td>
+                        <td>R @summary.AmountSpent.ToString("N2")</td>
+                        <td>R @summary.RemainingBudget.ToString("N2")</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar @(summary.PercentageSpent > 90 ? "bg-danger" : summary.PercentageSpent > 70 ? "bg-warning" : "bg-success")"
+                                     role="progressbar"
+                                     style="width: @summary.PercentageSpent%">
+                                    @summary.PercentageSpent.ToString("F1")%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-@(summary.Status == "Completed" ? "success" : "primary")">
+                                @summary.Status
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Contractor Performance -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Contractor Performance</h4>
+            <form asp-action="ReportPanel" method="get" class="d-flex">
+                <input type="text" name="contractorFilter" class="form-control me-2" placeholder="Filter by name..." value="@ViewBag.ContractorFilter" />
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </form>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Contractor Name</th>
+                    <th>Tasks Assigned</th>
+                    <th>Tasks Completed</th>
+                    <th>Completion Rate</th>
+                    <th>Average Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var contractor in Model.ContractorPerformances)
+                {
+                    <tr>
+                        <td>@contractor.ContractorName</td>
+                        <td>@contractor.TotalTasksAssigned</td>
+                        <td>@contractor.TasksCompleted</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: @contractor.CompletionRate%">
+                                    @contractor.CompletionRate.ToString("F1")%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                <span class="@(i < contractor.AverageRating ? "text-warning" : "text-muted")">★</span>
+                            }
+                            (@contractor.AverageRating.ToString("F1"))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

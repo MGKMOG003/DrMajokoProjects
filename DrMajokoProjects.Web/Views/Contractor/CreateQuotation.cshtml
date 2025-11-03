@@ -1,0 +1,132 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.CreateContractorQuotationViewModel
+
+@{
+    ViewData["Title"] = "Submit Quotation";
+    var contractorId = ViewBag.ContractorId as string;
+    var tasks = ViewBag.Tasks as List<DrMajokoProjects.Web.Models.ViewModels.TaskViewModel>;
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">💰 Submit Quotation</h3>
+            </div>
+            <div class="card-body">
+                @if (tasks != null && tasks.Any())
+                {
+                    <form asp-action="CreateQuotation" asp-route-contractorId="@contractorId" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="ContractorId" value="@contractorId" />
+                        <input type="hidden" asp-for="ContractorName" value="Contractor" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Select Task <span class="text-danger">*</span></label>
+                            <select asp-for="TaskId" class="form-select" required id="taskSelect">
+                                <option value="">-- Select a Task --</option>
+                                @foreach (var task in tasks)
+                                {
+                                    <option value="@task.Id" data-estimated="@task.EstimatedCost">
+                                        @task.TaskName - R @task.EstimatedCost.ToString("N2") estimated
+                                    </option>
+                                }
+                            </select>
+                            <small class="text-muted">Only tasks without approved quotations are shown</small>
+                            <span asp-validation-for="TaskId" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>💡 Quotation Tip:</strong> Break down your costs clearly. Include material costs and labor separately for transparency.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Material Cost (R) <span class="text-danger">*</span></label>
+                                <input asp-for="MaterialCost" class="form-control" type="number" step="0.01" min="0"
+                                       placeholder="0.00" required id="materialCost" />
+                                <span asp-validation-for="MaterialCost" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Labor Cost (R) <span class="text-danger">*</span></label>
+                                <input asp-for="LaborCost" class="form-control" type="number" step="0.01" min="0"
+                                       placeholder="0.00" required id="laborCost" />
+                                <span asp-validation-for="LaborCost" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="mb-0">Total Quotation Amount: <span class="text-success" id="totalAmount">R 0.00</span></h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description / Breakdown <span class="text-danger">*</span></label>
+                            <textarea asp-for="Description" class="form-control" rows="5" required
+                                      placeholder="Provide detailed breakdown of materials and labor...&#10;&#10;Example:&#10;Materials:&#10;- Cement: R 2,000&#10;- Bricks: R 3,500&#10;- Sand: R 800&#10;&#10;Labor:&#10;- 3 workers x 5 days = R 4,500"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Upload Supporting Documents (Optional)</label>
+                            <input asp-for="Attachments" class="form-control" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.png" />
+                            <small class="text-muted">You can upload quotations from suppliers, material receipts, etc. (PDF, DOC, Images)</small>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Note:</strong> Once submitted, your quotation will be reviewed by the Project Manager. Make sure all details are accurate.
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                ✓ Submit Quotation
+                            </button>
+                            <a asp-action="Quotations" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <h5>No Tasks Available</h5>
+                        <p>All your assigned tasks either have approved quotations or you have no assigned tasks yet.</p>
+                        <a asp-action="Tasks" asp-route-contractorId="@contractorId" class="btn btn-primary">
+                            View My Tasks
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Calculate total amount
+        function updateTotal() {
+            const material = parseFloat(document.getElementById('materialCost').value) || 0;
+            const labor = parseFloat(document.getElementById('laborCost').value) || 0;
+            const total = material + labor;
+            document.getElementById('totalAmount').textContent = 'R ' + total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        document.getElementById('materialCost').addEventListener('input', updateTotal);
+        document.getElementById('laborCost').addEventListener('input', updateTotal);
+
+        // Auto-suggest based on estimated cost
+        document.getElementById('taskSelect').addEventListener('change', function() {
+            const estimated = parseFloat(this.options[this.selectedIndex].getAttribute('data-estimated')) || 0;
+            if (estimated > 0) {
+                // Suggest 60% material, 40% labor as starting point
+                document.getElementById('materialCost').value = (estimated * 0.6).toFixed(2);
+                document.getElementById('laborCost').value = (estimated * 0.4).toFixed(2);
+                updateTotal();
+            }
+        });
+    </script>
+}

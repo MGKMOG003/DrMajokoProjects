@@ -1,0 +1,213 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ContractorTaskViewModel
+
+@{
+    ViewData["Title"] = "Task Details";
+    var contractorId = ViewBag.ContractorId as string;
+    var quotations = ViewBag.Quotations as List<DrMajokoProjects.Web.Models.ViewModels.QuotationViewModel>;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📋 Task Details</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Tasks" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+            ← Back to Tasks
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Task Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">@Model.TaskName</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Project:</dt>
+                    <dd class="col-sm-8">@Model.ProjectName</dd>
+
+                    <dt class="col-sm-4">Phase:</dt>
+                    <dd class="col-sm-8">@Model.PhaseName</dd>
+
+                    <dt class="col-sm-4">Priority:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@(Model.Priority == "Urgent" ? "danger" : Model.Priority == "High" ? "warning" : "info")">
+                            @Model.Priority
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@(Model.Status == "Done" ? "success" : Model.Status == "In Progress" ? "primary" : "secondary")">
+                            @Model.Status
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Estimated Start:</dt>
+                    <dd class="col-sm-8">@Model.EstimatedStartDate.ToString("dd MMMM yyyy")</dd>
+
+                    <dt class="col-sm-4">Estimated End:</dt>
+                    <dd class="col-sm-8">@Model.EstimatedEndDate.ToString("dd MMMM yyyy")</dd>
+
+                    @if (Model.ActualStartDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Actual Start:</dt>
+                        <dd class="col-sm-8">@Model.ActualStartDate.Value.ToString("dd MMMM yyyy")</dd>
+                    }
+
+                    @if (Model.ActualEndDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Actual End:</dt>
+                        <dd class="col-sm-8">@Model.ActualEndDate.Value.ToString("dd MMMM yyyy")</dd>
+                    }
+
+                    <dt class="col-sm-4">Estimated Cost:</dt>
+                    <dd class="col-sm-8"><strong>R @Model.EstimatedCost.ToString("N2")</strong></dd>
+
+                    @if (Model.ActualCost > 0)
+                    {
+                        <dt class="col-sm-4">Actual Cost:</dt>
+                        <dd class="col-sm-8"><strong>R @Model.ActualCost.ToString("N2")</strong></dd>
+                    }
+                </dl>
+
+                @if (!string.IsNullOrEmpty(Model.CompletionNotes))
+                {
+                    <div class="mt-3">
+                        <h6>Completion Notes:</h6>
+                        <p class="text-muted">@Model.CompletionNotes</p>
+                    </div>
+                }
+
+                @if (Model.CompletionPhotoUrls != null && Model.CompletionPhotoUrls.Any())
+                {
+                    <div class="mt-3">
+                        <h6>Completion Photos:</h6>
+                        <div class="row">
+                            @foreach (var photoUrl in Model.CompletionPhotoUrls)
+                            {
+                                <div class="col-md-3 mb-2">
+                                    <img src="@photoUrl" class="img-thumbnail" alt="Completion Photo" style="cursor: pointer;"
+                                         onclick="window.open('@photoUrl', '_blank')" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Update Status Form -->
+        @if (Model.Status != "Done")
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Update Task Status</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateTaskStatus" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="TaskId" value="@Model.Id" />
+                        <input type="hidden" name="contractorId" value="@contractorId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="Status" class="form-select" required>
+                                <option value="Scheduled" selected="@(Model.Status == "Scheduled")">Scheduled</option>
+                                <option value="In Progress" selected="@(Model.Status == "In Progress")">In Progress</option>
+                                <option value="Delayed" selected="@(Model.Status == "Delayed")">Delayed</option>
+                                <option value="Done">Done - Mark as Complete</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Actual Cost (R)</label>
+                            <input type="number" name="ActualCost" class="form-control" step="0.01" min="0"
+                                   value="@Model.ActualCost" placeholder="Enter actual cost if completing" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Completion Notes</label>
+                            <textarea name="CompletionNotes" class="form-control" rows="3"
+                                  placeholder="Add any notes about the work completed...">@Model.CompletionNotes</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Upload Completion Photos</label>
+                            <input type="file" name="CompletionPhotos" class="form-control" accept="image/*" multiple />
+                            <small class="text-muted">You can upload multiple photos showing completed work</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            ✓ Update Task Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quotations -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Quotations for this Task</h6>
+            </div>
+            <div class="card-body">
+                @if (quotations != null && quotations.Any())
+                {
+                    @foreach (var quote in quotations)
+                    {
+                        <div class="border-bottom pb-2 mb-2">
+                            <p class="mb-1">
+                                <strong>R @quote.TotalAmount.ToString("N2")</strong>
+                            </p>
+                            <p class="mb-1">
+                                <small>Submitted: @quote.SubmittedAt.ToString("dd MMM yyyy")</small>
+                            </p>
+                            <p class="mb-0">
+                                <span class="badge bg-@(quote.Status == "Approved" ? "success" : quote.Status == "Rejected" ? "danger" : "warning")">
+                                    @quote.Status
+                                </span>
+                            </p>
+                            @if (quote.Status == "Rejected" && !string.IsNullOrEmpty(quote.RejectionReason))
+                            {
+                                <small class="text-danger">Reason: @quote.RejectionReason</small>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No quotations submitted yet.</p>
+                    <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId" class="btn btn-primary btn-sm w-100">
+                        Submit Quotation
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (!Model.HasQuotation)
+                    {
+                        <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId" class="btn btn-success">
+                            💰 Submit Quotation
+                        </a>
+                    }
+                    <a asp-action="Dashboard" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+                        🏠 Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

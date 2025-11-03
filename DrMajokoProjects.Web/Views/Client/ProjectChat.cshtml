@@ -1,0 +1,109 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.MessageViewModel>
+
+@{
+    ViewData["Title"] = "Project Chat";
+    var project = ViewBag.Project as DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel;
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>Chat: @project.Name</h2>
+        <p class="text-muted">Communicate with your project team</p>
+    </div>
+    <div class="col text-end">
+        <a asp-action="MyChats" asp-route-clientId="@clientId" class="btn btn-secondary">← Back to Chats</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">💬 Project Discussion</h5>
+            </div>
+            <div class="card-body" style="height: 500px; overflow-y: scroll;" id="chatContainer">
+                @if (Model.Any())
+                {
+                    @await Html.PartialAsync("_ClientMessagePartial", Model)
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5">
+                        <p>No messages yet. Start the conversation!</p>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <form asp-action="SendMessage" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ProjectId" value="@project.Id" />
+                    <input type="hidden" name="SenderId" value="@clientId" />
+                    <input type="hidden" name="SenderName" value="Client" />
+
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <textarea name="MessageText" class="form-control" rows="2" placeholder="Type your message..." required></textarea>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="file" name="Attachment" class="form-control" title="Attach file" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100 h-100">
+                                Send 📤
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <strong>💡 Tip:</strong> Use this chat to ask questions, request updates, or discuss any concerns about your project with the team.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh messages every 5 seconds
+        let lastMessageTime = new Date('@(Model.LastOrDefault()?.CreatedAt.ToString("o") ?? DateTime.UtcNow.ToString("o"))');
+
+        setInterval(async function() {
+            const response = await fetch(`/Client/GetNewMessages?projectId=@project.Id&lastMessageTime=${lastMessageTime.toISOString()}`);
+            const html = await response.text();
+
+            if (html.trim()) {
+                document.getElementById('chatContainer').innerHTML += html;
+                lastMessageTime = new Date();
+
+                // Scroll to bottom
+                const container = document.getElementById('chatContainer');
+                container.scrollTop = container.scrollHeight;
+
+                // Play notification sound (optional)
+                // new Audio('/sounds/notification.mp3').play();
+            }
+        }, 5000); // Check every 5 seconds
+
+        // Scroll to bottom on load
+        window.onload = function() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        };
+
+        // Auto-scroll on new message
+        const observer = new MutationObserver(function() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        });
+
+        observer.observe(document.getElementById('chatContainer'), {
+            childList: true,
+            subtree: true
+        });
+    </script>
+}

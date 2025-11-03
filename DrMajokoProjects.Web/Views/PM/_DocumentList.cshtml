@@ -1,0 +1,53 @@
+﻿
+@model List<DrMajokoProjects.Web.Models.ViewModels.DocumentViewModel>
+
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>File Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in Model.OrderByDescending(d => d.UploadedAt))
+                        {
+                            <tr>
+                                <td>
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    <strong>@doc.FileName</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@doc.FileType</span>
+                                </td>
+                                <td>@((doc.FileSize / 1024.0).ToString("F2")) KB</td>
+                                <td>@doc.UploadedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>
+                                    <a href="@doc.FileUrl" target="_blank" class="btn btn-sm btn-primary">
+                                        👁️ View
+                                    </a>
+                                    <a href="@doc.FileUrl" download class="btn btn-sm btn-success">
+                                        ⬇️ Download
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No documents in this category yet.
+    </div>
+}

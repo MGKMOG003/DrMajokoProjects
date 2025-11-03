@@ -1,0 +1,144 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ContractorSurveyViewModel
+
+@{
+    ViewData["Title"] = "Evaluate Contractor";
+    var task = ViewBag.Task as DrMajokoProjects.Web.Models.ViewModels.TaskViewModel;
+    var pmId = ViewBag.PMId as string;
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Contractor Performance Survey</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Task:</strong> @Model.TaskName<br />
+                    <strong>Contractor:</strong> @Model.ContractorName<br />
+                    <strong>Completed:</strong> @(task.ActualEndDate?.ToString("dd MMMM yyyy") ?? "N/A")
+                </div>
+
+                <form asp-action="CreateSurvey" method="post">
+                    <input type="hidden" asp-for="TaskId" />
+                    <input type="hidden" asp-for="TaskName" />
+                    <input type="hidden" asp-for="ContractorId" />
+                    <input type="hidden" asp-for="ContractorName" />
+                    <input type="hidden" asp-for="ProjectManagerId" />
+
+                    <!-- Timeliness Rating -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>1. Timeliness</strong> <span class="text-danger">*</span></label>
+                        <p class="text-muted">Did the contractor complete the task on time?</p>
+                        <div class="rating-group">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <input type="radio" asp-for="TimelinessRating" value="@i" id="timeliness-@i" required />
+                                <label for="timeliness-@i">@i @(i == 1 ? "⭐" : i == 2 ? "⭐⭐" : i == 3 ? "⭐⭐⭐" : i == 4 ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐")</label>
+                            }
+                        </div>
+                        <span asp-validation-for="TimelinessRating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Quality Rating -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>2. Work Quality</strong> <span class="text-danger">*</span></label>
+                        <p class="text-muted">Was the quality of work satisfactory?</p>
+                        <div class="rating-group">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <input type="radio" asp-for="QualityRating" value="@i" id="quality-@i" required />
+                                <label for="quality-@i">@i @(i == 1 ? "⭐" : i == 2 ? "⭐⭐" : i == 3 ? "⭐⭐⭐" : i == 4 ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐")</label>
+                            }
+                        </div>
+                        <span asp-validation-for="QualityRating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Communication Rating -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>3. Communication</strong> <span class="text-danger">*</span></label>
+                        <p class="text-muted">How responsive and clear was the contractor?</p>
+                        <div class="rating-group">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <input type="radio" asp-for="CommunicationRating" value="@i" id="communication-@i" required />
+                                <label for="communication-@i">@i @(i == 1 ? "⭐" : i == 2 ? "⭐⭐" : i == 3 ? "⭐⭐⭐" : i == 4 ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐")</label>
+                            }
+                        </div>
+                        <span asp-validation-for="CommunicationRating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Professionalism Rating -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>4. Professionalism</strong> <span class="text-danger">*</span></label>
+                        <p class="text-muted">How professional was the contractor's conduct?</p>
+                        <div class="rating-group">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <input type="radio" asp-for="ProfessionalismRating" value="@i" id="professionalism-@i" required />
+                                <label for="professionalism-@i">@i @(i == 1 ? "⭐" : i == 2 ? "⭐⭐" : i == 3 ? "⭐⭐⭐" : i == 4 ? "⭐⭐⭐⭐" : "⭐⭐⭐⭐⭐")</label>
+                            }
+                        </div>
+                        <span asp-validation-for="ProfessionalismRating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Comments -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Additional Comments</strong></label>
+                        <textarea asp-for="Comments" class="form-control" rows="4" placeholder="Please provide any additional feedback..."></textarea>
+                    </div>
+
+                    <!-- Would Recommend -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input asp-for="WouldRecommend" class="form-check-input" type="checkbox" />
+                            <label class="form-check-label" asp-for="WouldRecommend">
+                                I would recommend this contractor for future projects
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Survey</button>
+                        <a asp-action="Timeline" asp-route-projectId="@task.ProjectId" asp-route-pmId="@pmId" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .rating-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+        .rating-group input[type="radio"] {
+            display: none;
+        }
+
+        .rating-group label {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+            .rating-group label:hover {
+                background-color: #f0f0f0;
+                border-color: #0d6efd;
+            }
+
+        .rating-group input[type="radio"]:checked + label {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+</style>

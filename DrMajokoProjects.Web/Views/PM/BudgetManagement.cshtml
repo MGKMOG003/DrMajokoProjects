@@ -1,0 +1,250 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.BudgetSummaryViewModel
+
+@{
+    ViewData["Title"] = "Budget Management";
+    var pmId = ViewBag.PMId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📊 Budget Management: @Model.Project.Name</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Timeline" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-primary">
+            📅 View Timeline
+        </a>
+        <a asp-action="Index" asp-route-pmId="@pmId" class="btn btn-secondary">
+            ← Back
+        </a>
+    </div>
+</div>
+
+<!-- Budget Alerts -->
+@if (Model.Alerts.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            @foreach (var alert in Model.Alerts)
+            {
+                <div class="alert alert-@(alert.Type == "Danger" ? "danger" : "warning") alert-dismissible fade show">
+                    <strong>⚠️ Budget Alert:</strong> @alert.Message
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Budget Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h6 class="text-muted">Total Project Budget</h6>
+                <h3 class="text-primary">R @Model.TotalProjectBudget.ToString("N2")</h3>
+                <small class="text-muted">Set by Admin</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body">
+                <h6 class="text-muted">Allocated to Phases</h6>
+                <h3 class="text-info">R @Model.TotalAllocatedBudget.ToString("N2")</h3>
+                <small class="text-muted">@((Model.TotalAllocatedBudget / Model.TotalProjectBudget * 100).ToString("F1"))% of total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-@(Model.PercentageSpent > 90 ? "danger" : Model.PercentageSpent > 75 ? "warning" : "success")">
+            <div class="card-body">
+                <h6 class="text-muted">Total Spent</h6>
+                <h3 class="text-@(Model.PercentageSpent > 90 ? "danger" : Model.PercentageSpent > 75 ? "warning" : "success")">
+                    R @Model.TotalSpent.ToString("N2")
+                </h3>
+                <small class="text-muted">@Model.PercentageSpent.ToString("F1")% used</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <h6 class="text-muted">Remaining Budget</h6>
+                <h3 class="text-success">R @Model.RemainingBudget.ToString("N2")</h3>
+                <small class="text-muted">Available funds</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overall Budget Progress Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5>Overall Budget Usage</h5>
+                <div class="progress" style="height: 40px;">
+                    <div class="progress-bar @(Model.PercentageSpent > 90 ? "bg-danger" : Model.PercentageSpent > 75 ? "bg-warning" : "bg-success")"
+                         style="width: @Model.PercentageSpent%">
+                        <strong>@Model.PercentageSpent.ToString("F1")% - R @Model.TotalSpent.ToString("N0") spent</strong>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="text-muted">R 0</span>
+                    <span class="text-muted">R @Model.TotalProjectBudget.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phase Budget Breakdown -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Phase Budget Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Phase Name</th>
+                                <th>Budget Allocated</th>
+                                <th>Amount Spent</th>
+                                <th>Remaining</th>
+                                <th>% Used</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var phase in Model.Phases)
+                            {
+                                var phasePercentage = phase.PercentageUsed;
+                                <tr class="@(phasePercentage > 100 ? "table-danger" : phasePercentage > 90 ? "table-warning" : "")">
+                                    <td>
+                                        <strong>@phase.PhaseName</strong>
+                                    </td>
+                                    <td>R @phase.PhaseBudget.ToString("N2")</td>
+                                    <td>
+                                        <span class="@(phasePercentage > 100 ? "text-danger" : phasePercentage > 90 ? "text-warning" : "text-success")">
+                                            R @phase.PhaseCost.ToString("N2")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="@(phase.RemainingBudget < 0 ? "text-danger" : "text-success")">
+                                            R @phase.RemainingBudget.ToString("N2")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(phasePercentage > 100 ? "danger" : phasePercentage > 90 ? "warning" : phasePercentage > 75 ? "info" : "success")">
+                                            @phasePercentage.ToString("F1")%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(phase.Status == "Done" ? "success" : phase.Status == "In Progress" ? "primary" : "secondary")">
+                                            @phase.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="width: 150px;">
+                                            <div class="progress-bar @(phasePercentage > 100 ? "bg-danger" : phasePercentage > 90 ? "bg-warning" : "bg-success")"
+                                                 style="width: @Math.Min(phasePercentage, 100)%">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <td><strong>TOTAL</strong></td>
+                                <td><strong>R @Model.TotalAllocatedBudget.ToString("N2")</strong></td>
+                                <td><strong>R @Model.TotalSpent.ToString("N2")</strong></td>
+                                <td><strong>R @(Model.TotalAllocatedBudget - Model.TotalSpent).ToString("N2")</strong></td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Allocation Chart -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Budget Allocation by Phase</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="budgetAllocationChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Spending by Phase</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="spendingChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Budget Allocation Chart
+        const allocationCtx = document.getElementById('budgetAllocationChart').getContext('2d');
+        new Chart(allocationCtx, {
+            type: 'pie',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.Phases.Select(p => $"'{p.PhaseName}'")))],
+                datasets: [{
+                    data: [@string.Join(",", Model.Phases.Select(p => p.PhaseBudget))],
+                    backgroundColor: [
+                        '#0d6efd', '#6610f2', '#6f42c1', '#d63384',
+                        '#dc3545', '#fd7e14', '#ffc107', '#198754'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Spending Chart
+        const spendingCtx = document.getElementById('spendingChart').getContext('2d');
+        new Chart(spendingCtx, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.Phases.Select(p => $"'{p.PhaseName}'")))],
+                datasets: [{
+                    label: 'Budget',
+                    data: [@string.Join(",", Model.Phases.Select(p => p.PhaseBudget))],
+                    backgroundColor: '#0d6efd'
+                }, {
+                    label: 'Spent',
+                    data: [@string.Join(",", Model.Phases.Select(p => p.PhaseCost))],
+                    backgroundColor: '#198754'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+}

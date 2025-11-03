@@ -1,0 +1,215 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.TimelineViewModel
+
+@{
+    ViewData["Title"] = "Project Timeline";
+    var pmId = ViewBag.PMId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📅 Project Timeline: @Model.Project.Name</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="CreatePhase" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-primary">
+            ➕ Add Phase
+        </a>
+        <a asp-action="BudgetManagement" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-info">
+            💰 Budget
+        </a>
+        <a asp-action="Index" asp-route-pmId="@pmId" class="btn btn-secondary">
+            ← Back
+        </a>
+    </div>
+</div>
+
+<!-- Project Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Total Budget</h6>
+                <h4>R @Model.TotalBudget.ToString("N2")</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Total Spent</h6>
+                <h4 class="@(Model.TotalCost > Model.TotalBudget ? "text-danger" : "text-success")">
+                    R @Model.TotalCost.ToString("N2")
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Overall Progress</h6>
+                <h4>@Model.OverallProgress.ToString("F1")%</h4>
+                <div class="progress">
+                    <div class="progress-bar" style="width: @Model.OverallProgress%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted">Tasks Completed</h6>
+                <h4>@Model.CompletedTasks / @Model.TotalTasks</h4>
+                @if (Model.OverdueTasks > 0)
+                {
+                    <span class="badge bg-danger">@Model.OverdueTasks Overdue</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phases and Tasks -->
+@if (Model.Phases.Any())
+{
+    @foreach (var phase in Model.Phases)
+    {
+        var phasePercentage = phase.PhaseBudget > 0 ? (phase.PhaseCost / phase.PhaseBudget) * 100 : 0;
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            @phase.PhaseName
+                            <span class="badge bg-@(phase.Status == "Done" ? "success" : phase.Status == "In Progress" ? "warning" : "secondary")">
+                                @phase.Status
+                            </span>
+                        </h5>
+                        <small>
+                            @phase.EstimatedStartDate.ToString("dd MMM yyyy") - @phase.EstimatedEndDate.ToString("dd MMM yyyy")
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-light text-dark">
+                            R @phase.PhaseCost.ToString("N0") / R @phase.PhaseBudget.ToString("N0")
+                        </span>
+                        <span class="badge bg-light text-dark">
+                            @phase.CompletionPercentage.ToString("F0")% Complete
+                        </span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group">
+                            <a asp-action="CreateTask" asp-route-phaseId="@phase.Id" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-light">
+                                ➕ Add Task
+                            </a>
+                            <a asp-action="PhaseReport" asp-route-phaseId="@phase.Id" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-light">
+                                📊 Report
+                            </a>
+                            <a asp-action="EditPhase" asp-route-id="@phase.Id" asp-route-pmId="@pmId" class="btn btn-sm btn-light">
+                                ✏️ Edit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Phase Budget Bar -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Phase Budget Usage</span>
+                        <span class="@(phasePercentage > 90 ? "text-danger" : phasePercentage > 75 ? "text-warning" : "text-success")">
+                            @phasePercentage.ToString("F1")%
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar @(phasePercentage > 90 ? "bg-danger" : phasePercentage > 75 ? "bg-warning" : "bg-success")"
+                             style="width: @phasePercentage%">
+                            R @phase.RemainingBudget.ToString("N0") remaining
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Table -->
+                @if (phase.Tasks != null && phase.Tasks.Any())
+                {
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Contractor</th>
+                                <th>Start - End</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in phase.Tasks)
+                            {
+                                <tr class="@(task.IsOverdue ? "table-danger" : "")">
+                                    <td>
+                                        <strong>@task.TaskName</strong>
+                                        @if (task.IsOverdue && task.Status != "Done")
+                                        {
+                                            <span class="badge bg-danger">Overdue</span>
+                                        }
+                                    </td>
+                                    <td>@task.AssignedContractorName</td>
+                                    <td>
+                                        <small>
+                                            @task.EstimatedStartDate.ToString("dd MMM") -
+                                            @task.EstimatedEndDate.ToString("dd MMM")
+                                        </small>
+                                    </td>
+                                    <td>R @task.EstimatedCost.ToString("N0")</td>
+                                    <td>
+                                        <span class="badge bg-@(task.Status == "Done" ? "success" : task.Status == "In Progress" ? "primary" : task.Status == "Delayed" ? "danger" : "secondary")">
+                                            @task.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(task.Priority == "Urgent" ? "danger" : task.Priority == "High" ? "warning" : "info")">
+                                            @task.Priority
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="EditTask" asp-route-id="@task.Id" asp-route-pmId="@pmId" class="btn btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            @if (task.Status == "Done")
+                                            {
+                                                <a asp-action="CreateSurvey" asp-route-taskId="@task.Id" asp-route-pmId="@pmId" class="btn btn-outline-success">
+                                                    Survey
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        No tasks in this phase yet.
+                        <a asp-action="CreateTask" asp-route-phaseId="@phase.Id" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId">
+                            Add your first task
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-warning">
+        <h4>No phases created yet</h4>
+        <p>Start by creating your first project phase.</p>
+        <a asp-action="CreatePhase" asp-route-projectId="@Model.Project.Id" asp-route-pmId="@pmId" class="btn btn-primary">
+            Create First Phase
+        </a>
+    </div>
+}

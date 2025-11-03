@@ -1,0 +1,38 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.MessageViewModel>
+
+@foreach (var message in Model)
+{
+    var isClient = message.SenderName.Contains("Client", StringComparison.OrdinalIgnoreCase);
+
+    <div class="mb-3 @(isClient ? "text-end" : "")">
+        <div class="d-inline-block" style="max-width: 70%;">
+            <div class="card @(isClient ? "bg-primary text-white" : "bg-light")">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-start mb-1">
+                        <div class="flex-shrink-0">
+                            <div class="@(isClient ? "bg-white text-primary" : "bg-primary text-white") rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width: 35px; height: 35px;">
+                                @message.SenderName.Substring(0, 1).ToUpper()
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <strong class="d-block">@message.SenderName</strong>
+                            <small class="@(isClient ? "text-white-50" : "text-muted")">
+                                @message.CreatedAt.ToString("dd MMM HH:mm")
+                            </small>
+                        </div>
+                    </div>
+
+                    <p class="mb-2">@message.MessageText</p>
+
+                    @if (!string.IsNullOrEmpty(message.AttachmentUrl))
+                    {
+                        <a href="@message.AttachmentUrl" target="_blank" class="btn btn-sm @(isClient ? "btn-light" : "btn-primary")">
+                            📎 View Attachment
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

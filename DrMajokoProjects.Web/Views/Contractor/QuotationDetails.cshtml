@@ -1,0 +1,179 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.QuotationViewModel
+
+@{
+    ViewData["Title"] = "Quotation Details";
+    var contractorId = ViewBag.ContractorId as string;
+    var task = ViewBag.Task as DrMajokoProjects.Web.Models.ViewModels.TaskViewModel;
+    var project = ViewBag.Project as DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>💰 Quotation Details</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Quotations" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+            ← Back to Quotations
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Quotation Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-@(Model.Status == "Approved" ? "success" : Model.Status == "Rejected" ? "danger" : "warning") text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quotation for: @Model.TaskName</h5>
+                    <span class="badge bg-light text-dark">@Model.Status</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Project:</dt>
+                    <dd class="col-sm-8">@project.Name</dd>
+
+                    <dt class="col-sm-4">Task:</dt>
+                    <dd class="col-sm-8">@task.TaskName</dd>
+
+                    <dt class="col-sm-4">Submitted On:</dt>
+                    <dd class="col-sm-8">@Model.SubmittedAt.ToString("dd MMMM yyyy HH:mm")</dd>
+
+                    @if (Model.ReviewedAt.HasValue)
+                    {
+                        <dt class="col-sm-4">Reviewed On:</dt>
+                        <dd class="col-sm-8">@Model.ReviewedAt.Value.ToString("dd MMMM yyyy HH:mm")</dd>
+                    }
+
+                    <dt class="col-sm-4">Material Cost:</dt>
+                    <dd class="col-sm-8">R @Model.MaterialCost.ToString("N2")</dd>
+
+                    <dt class="col-sm-4">Labor Cost:</dt>
+                    <dd class="col-sm-8">R @Model.LaborCost.ToString("N2")</dd>
+
+                    <dt class="col-sm-4"><strong>Total Amount:</strong></dt>
+                    <dd class="col-sm-8"><h4 class="text-success">R @Model.TotalAmount.ToString("N2")</h4></dd>
+                </dl>
+
+                @if (Model.Status == "Rejected" && !string.IsNullOrEmpty(Model.RejectionReason))
+                {
+                    <div class="alert alert-danger">
+                        <h6><strong>❌ Rejection Reason:</strong></h6>
+                        <p class="mb-0">@Model.RejectionReason</p>
+                    </div>
+                }
+
+                @if (Model.Status == "Approved")
+                {
+                    <div class="alert alert-success">
+                        <h6><strong>✅ Quotation Approved!</strong></h6>
+                        <p class="mb-0">Your quotation has been approved. You can now proceed with the work.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Description & Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <pre style="white-space: pre-wrap; font-family: inherit;">@Model.Description</pre>
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        @if (Model.AttachmentUrls != null && Model.AttachmentUrls.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Supporting Documents</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach (var attachment in Model.AttachmentUrls)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                📎 Document
+                                <a href="@attachment" target="_blank" class="btn btn-sm btn-primary">
+                                    Download
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Status Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Status Timeline</h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <span class="badge bg-success">✓</span>
+                        <div class="ms-3">
+                            <strong>Submitted</strong>
+                            <p class="text-muted mb-0">@Model.SubmittedAt.ToString("dd MMM yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                    @if (Model.ReviewedAt.HasValue)
+                    {
+                        <div class="timeline-item mt-3">
+                            <span class="badge bg-@(Model.Status == "Approved" ? "success" : "danger")">
+                                @(Model.Status == "Approved" ? "✓" : "✗")
+                            </span>
+                            <div class="ms-3">
+                                <strong>@Model.Status</strong>
+                                <p class="text-muted mb-0">@Model.ReviewedAt.Value.ToString("dd MMM yyyy HH:mm")</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="timeline-item mt-3">
+                            <span class="badge bg-warning">⏳</span>
+                            <div class="ms-3">
+                                <strong>Pending Review</strong>
+                                <p class="text-muted mb-0">Awaiting PM approval</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Details -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Related Task</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>@task.TaskName</strong></p>
+                <p class="text-muted mb-2">
+                    Status: <span class="badge bg-primary">@task.Status</span>
+                </p>
+                <p class="text-muted mb-2">
+                    Estimated: R @task.EstimatedCost.ToString("N2")
+                </p>
+                <a asp-action="TaskDetails" asp-route-id="@task.Id" asp-route-contractorId="@contractorId"
+                   class="btn btn-sm btn-primary w-100">
+                    View Task Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        display: flex;
+        align-items: start;
+    }
+</style>

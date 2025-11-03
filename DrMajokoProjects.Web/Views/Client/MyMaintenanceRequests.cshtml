@@ -1,0 +1,73 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.MaintenanceRequestViewModel>
+
+@{
+    ViewData["Title"] = "My Maintenance Requests";
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>My Maintenance Requests</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="SubmitMaintenance" asp-route-clientId="@clientId" class="btn btn-primary">Submit New Request</a>
+        <a asp-action="Index" asp-route-clientId="@clientId" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        @if (Model.Any())
+        {
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model)
+                            {
+                                <tr>
+                                    <td><strong>@request.Title</strong></td>
+                                    <td>@(request.Description.Length > 50 ? request.Description.Substring(0, 50) + "..." : request.Description)</td>
+                                    <td>
+                                        <span class="badge bg-@(request.Priority == "Urgent" ? "danger" : request.Priority == "High" ? "warning" : request.Priority == "Medium" ? "info" : "secondary")">
+                                            @request.Priority
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(request.Status == "Completed" ? "success" : request.Status == "In Progress" ? "primary" : request.Status == "Assigned" ? "info" : "secondary")">
+                                            @request.Status
+                                        </span>
+                                    </td>
+                                    <td>@request.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                    <td>
+                                        <a asp-action="MaintenanceDetails" asp-route-id="@request.Id" asp-route-clientId="@clientId" class="btn btn-sm btn-outline-info">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <h4>No maintenance requests</h4>
+                <p>You haven't submitted any maintenance requests yet.</p>
+                <a asp-action="SubmitMaintenance" asp-route-clientId="@clientId" class="btn btn-primary">Submit Your First Request</a>
+            </div>
+        }
+    </div>
+</div>

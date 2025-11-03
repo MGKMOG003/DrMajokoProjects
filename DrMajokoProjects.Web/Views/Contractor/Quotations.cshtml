@@ -1,0 +1,129 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.QuotationViewModel>
+
+@{
+    ViewData["Title"] = "My Quotations";
+    var contractorId = ViewBag.ContractorId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>💰 My Quotations</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId" class="btn btn-success">
+            ➕ Submit New Quotation
+        </a>
+        <a asp-action="Dashboard" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+            ← Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Quotation Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h6>Total Quotations</h6>
+                <h2>@Model.Count</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h6>Pending Review</h6>
+                <h2>@Model.Count(q => q.Status == "Submitted")</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h6>Approved</h6>
+                <h2>@Model.Count(q => q.Status == "Approved")</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h6>Rejected</h6>
+                <h2>@Model.Count(q => q.Status == "Rejected")</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quotations Table -->
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Task</th>
+                        <th>Material Cost</th>
+                        <th>Labor Cost</th>
+                        <th>Total Amount</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var quotation in Model.OrderByDescending(q => q.SubmittedAt))
+                    {
+                        <tr class="@(quotation.Status == "Submitted" ? "table-warning" : "")">
+                            <td><strong>@quotation.TaskName</strong></td>
+                            <td>R @quotation.MaterialCost.ToString("N2")</td>
+                            <td>R @quotation.LaborCost.ToString("N2")</td>
+                            <td><strong>R @quotation.TotalAmount.ToString("N2")</strong></td>
+                            <td>@quotation.SubmittedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <span class="badge bg-@(quotation.Status == "Approved" ? "success" : quotation.Status == "Rejected" ? "danger" : "warning")">
+                                    @quotation.Status
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-action="QuotationDetails" asp-route-id="@quotation.Id" asp-route-contractorId="@contractorId"
+                                   class="btn btn-sm btn-info">
+                                    👁️ View
+                                </a>
+                            </td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(quotation.Description))
+                        {
+                            <tr>
+                                <td colspan="7" class="small text-muted">
+                                    <strong>Description:</strong> @quotation.Description
+                                </td>
+                            </tr>
+                        }
+                        @if (quotation.Status == "Rejected" && !string.IsNullOrEmpty(quotation.RejectionReason))
+                        {
+                            <tr>
+                                <td colspan="7" class="small">
+                                    <div class="alert alert-danger alert-sm py-1 px-2 mb-0">
+                                        <strong>Rejection Reason:</strong> @quotation.RejectionReason
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <h5>No quotations yet</h5>
+        <p>You haven't submitted any quotations. Start by submitting a quotation for your assigned tasks.</p>
+        <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId" class="btn btn-primary">
+            Submit Your First Quotation
+        </a>
+    </div>
+}

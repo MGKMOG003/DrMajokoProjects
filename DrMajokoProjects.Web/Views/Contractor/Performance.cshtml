@@ -1,0 +1,366 @@
+﻿@{
+    ViewData["Title"] = "Performance Report";
+    var contractorId = ViewBag.ContractorId as string;
+    var overallPerformance = ViewBag.OverallPerformance as DrMajokoProjects.Web.Models.ViewModels.PerformanceMetrics;
+    var phasePerformances = ViewBag.PhasePerformances as List<DrMajokoProjects.Web.Models.ViewModels.PhasePerformance>;
+    var surveys = ViewBag.Surveys as List<DrMajokoProjects.Web.Models.ViewModels.ContractorSurveyViewModel>;
+    var tasks = ViewBag.Tasks as List<DrMajokoProjects.Web.Models.ViewModels.ContractorTaskViewModel>;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>📊 Performance Report</h2>
+    </div>
+    <div class="col text-end">
+        <button onclick="window.print()" class="btn btn-success">
+            🖨️ Print Report
+        </button>
+        <a asp-action="Dashboard" asp-route-contractorId="@contractorId" class="btn btn-secondary">
+            ← Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Overall Performance Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Completion Rate</h6>
+                <h2 class="text-primary">@overallPerformance.CompletionRate.ToString("F1")%</h2>
+                <p class="mb-0">@overallPerformance.TotalTasksCompleted completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">On-Time Tasks</h6>
+                <h2 class="text-success">@overallPerformance.TotalTasksOnTime</h2>
+                <p class="mb-0">of @overallPerformance.TotalTasksCompleted</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Average Delay</h6>
+                <h2 class="text-warning">@overallPerformance.AverageDelayDays.ToString("F1")</h2>
+                <p class="mb-0">days</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Client Rating</h6>
+                <h2 class="text-info">
+                    @if (surveys != null && surveys.Any())
+                    {
+                        @surveys.Average(s => s.OverallRating).ToString("F1")
+                    }
+                    else
+                    {
+                        <span>N/A</span>
+                    }
+                </h2>
+                <p class="mb-0">⭐ out of 5.0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Charts -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Task Status Distribution</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Performance Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phase Performance -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Performance by Phase</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Phase</th>
+                                <th>Total Tasks</th>
+                                <th>Completed</th>
+                                <th>On Time</th>
+                                <th>Delayed</th>
+                                <th>Avg Delay (days)</th>
+                                <th>Completion %</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (phasePerformances != null && phasePerformances.Any())
+                            {
+                                @foreach (var phase in phasePerformances)
+                                {
+                                    <tr>
+                                        <td><strong>@phase.PhaseName</strong></td>
+                                        <td>@phase.TotalTasks</td>
+                                        <td>@phase.CompletedTasks</td>
+                                        <td><span class="text-success">@phase.OnTimeTasks</span></td>
+                                        <td><span class="text-danger">@phase.DelayedTasks</span></td>
+                                        <td>@phase.AverageDelayDays.ToString("F1")</td>
+                                        <td>@phase.CompletionPercentage.ToString("F1")%</td>
+                                        <td>
+                                            <div class="progress" style="width: 150px;">
+                                                <div class="progress-bar bg-success" style="width: @phase.CompletionPercentage%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No phase data available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Feedback / Surveys -->
+@if (surveys != null && surveys.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Client Feedback & Ratings</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var survey in surveys.OrderByDescending(s => s.CreatedAt))
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">@survey.TaskName</h6>
+                                <p class="text-muted mb-2">
+                                    <small>Rated on: @survey.CreatedAt.ToString("dd MMMM yyyy")</small>
+                                </p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <strong>Timeliness:</strong>
+                                        <div class="text-warning">
+                                            @for (int i = 0; i < survey.TimelinessRating; i++)
+                                            {
+                                                <span>⭐</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Quality:</strong>
+                                        <div class="text-warning">
+                                            @for (int i = 0; i < survey.QualityRating; i++)
+                                            {
+                                                <span>⭐</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Communication:</strong>
+                                        <div class="text-warning">
+                                            @for (int i = 0; i < survey.CommunicationRating; i++)
+                                            {
+                                                <span>⭐</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Professionalism:</strong>
+                                        <div class="text-warning">
+                                            @for (int i = 0; i < survey.ProfessionalismRating; i++)
+                                            {
+                                                <span>⭐</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <strong>Overall Rating:</strong>
+                                    <span class="badge bg-success">@survey.OverallRating.ToString("F1") / 5.0</span>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(survey.Comments))
+                                {
+                                    <div class="alert alert-light">
+                                        <strong>Comments:</strong>
+                                        <p class="mb-0">@survey.Comments</p>
+                                    </div>
+                                }
+
+                                @if (survey.WouldRecommend)
+                                {
+                                    <div class="badge bg-success">✓ Would Recommend</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Task History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Task History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Task</th>
+                                <th>Project</th>
+                                <th>Phase</th>
+                                <th>Estimated Duration</th>
+                                <th>Actual Duration</th>
+                                <th>Delay</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (tasks != null && tasks.Any())
+                            {
+                                @foreach (var task in tasks.Where(t => t.Status == "Done").OrderByDescending(t => t.ActualEndDate))
+                                {
+                                    var estimatedDuration = (task.EstimatedEndDate - task.EstimatedStartDate).Days;
+                                    var actualDuration = task.ActualEndDate.HasValue && task.ActualStartDate.HasValue
+                                    ? (task.ActualEndDate.Value - task.ActualStartDate.Value).Days : 0;
+
+                                    <tr>
+                                        <td>@task.TaskName</td>
+                                        <td>@task.ProjectName</td>
+                                        <td>@task.PhaseName</td>
+                                        <td>@estimatedDuration days</td>
+                                        <td>@actualDuration days</td>
+                                        <td>
+                                            @if (task.DaysLate > 0)
+                                            {
+                                                <span class="text-danger">+@task.DaysLate days</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-success">On Time</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">@task.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No completed tasks yet</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['On Track', 'Delayed', 'In Progress'],
+                datasets: [{
+                    data: [
+                        @overallPerformance.OnTrackPercentage,
+                        @overallPerformance.DelayedPercentage,
+                        @overallPerformance.InProgressPercentage
+                    ],
+                    backgroundColor: ['#198754', '#dc3545', '#ffc107']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Performance Breakdown Chart
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(perfCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Completion Rate', 'On-Time Rate'],
+                datasets: [{
+                    label: 'Performance %',
+                    data: [
+                        @overallPerformance.CompletionRate,
+                        @overallPerformance.TotalTasksCompleted > 0
+                            ? (@overallPerformance.TotalTasksOnTime / @overallPerformance.TotalTasksCompleted * 100)
+                            : 0
+                    ],
+                    backgroundColor: ['#0d6efd', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    @@media print {
+        .btn {
+            display: none !important;
+        }
+    }
+</style>

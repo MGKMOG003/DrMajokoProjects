@@ -1,0 +1,86 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ContractorTaskViewModel>
+
+@{
+    var contractorId = ViewBag.ContractorId as string ?? "contractor123";
+}
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var task in Model.OrderBy(t => t.EstimatedEndDate))
+        {
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 @(task.IsOverdue && task.Status != "Done" ? "border-danger" : "")">
+                    <div class="card-header bg-@(task.Priority == "Urgent" ? "danger" : task.Priority == "High" ? "warning" : "primary") text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@task.TaskName</h6>
+                            <span class="badge bg-light text-dark">@task.Priority</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            <strong>Project:</strong> @task.ProjectName<br />
+                            <strong>Phase:</strong> @task.PhaseName
+                        </p>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Timeline</small>
+                            <p class="mb-1">
+                                📅 @task.EstimatedStartDate.ToString("dd MMM") - @task.EstimatedEndDate.ToString("dd MMM yyyy")
+                            </p>
+                            @if (task.DaysRemaining >= 0 && task.Status != "Done")
+                            {
+                                <span class="badge bg-info">@task.DaysRemaining days remaining</span>
+                            }
+                            else if (task.IsOverdue && task.Status != "Done")
+                            {
+                                <span class="badge bg-danger">Overdue by @Math.Abs(task.DaysRemaining) days</span>
+                            }
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Status</small><br />
+                            <span class="badge bg-@(task.Status == "Done" ? "success" : task.Status == "In Progress" ? "primary" : task.Status == "Delayed" ? "danger" : "secondary")">
+                                @task.Status
+                            </span>
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted">Estimated Cost</small>
+                            <p class="mb-0"><strong>R @task.EstimatedCost.ToString("N2")</strong></p>
+                        </div>
+
+                        @if (!task.HasQuotation && task.Status != "Done")
+                        {
+                            <div class="alert alert-warning alert-sm py-1 px-2 mb-2">
+                                ⚠️ No quotation submitted
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex gap-2">
+                            <a asp-action="TaskDetails" asp-route-id="@task.Id" asp-route-contractorId="@contractorId"
+                               class="btn btn-sm btn-primary flex-fill">
+                                👁️ View Details
+                            </a>
+                            @if (!task.HasQuotation)
+                            {
+                                <a asp-action="CreateQuotation" asp-route-contractorId="@contractorId"
+                                   class="btn btn-sm btn-success">
+                                    💰 Quote
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <h5>No tasks found</h5>
+        <p>There are no tasks in this category.</p>
+    </div>
+}

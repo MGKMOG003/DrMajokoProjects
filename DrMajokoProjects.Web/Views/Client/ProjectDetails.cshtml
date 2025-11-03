@@ -1,0 +1,130 @@
+﻿@model DrMajokoProjects.Web.Models.ViewModels.ClientProjectDetailsViewModel
+
+@{
+    ViewData["Title"] = "Project Details";
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>@Model.Project.Name</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="SubmitMaintenance" asp-route-clientId="@clientId" class="btn btn-primary">Report Issue</a>
+        <a asp-action="MyProjects" asp-route-clientId="@clientId" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Project Information</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Description:</strong> @Model.Project.Description</p>
+                <p>
+                    <strong>Status:</strong>
+                    <span class="badge bg-@(Model.Project.Status == "Completed" ? "success" : "primary")">@Model.Project.Status</span>
+                </p>
+                <p><strong>Start Date:</strong> @Model.Project.StartDate.ToString("dd MMMM yyyy")</p>
+                <p><strong>End Date:</strong> @(Model.Project.EndDate?.ToString("dd MMMM yyyy") ?? "Ongoing")</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Maintenance Requests (@Model.MaintenanceRequests.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.MaintenanceRequests.Any())
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.MaintenanceRequests)
+                            {
+                                <tr>
+                                    <td>@request.Title</td>
+                                    <td><span class="badge bg-@(request.Status == "Completed" ? "success" : "secondary")">@request.Status</span></td>
+                                    <td><span class="badge bg-@(request.Priority == "Urgent" ? "danger" : "info")">@request.Priority</span></td>
+                                    <td>@request.CreatedAt.ToString("dd MMM")</td>
+                                    <td>
+                                        <a asp-action="MaintenanceDetails" asp-route-id="@request.Id" asp-route-clientId="@clientId" class="btn btn-sm btn-outline-info">View</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">No maintenance requests for this project.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Budget</h5>
+            </div>
+            <div class="card-body">
+                <h3>R @Model.Project.Budget.ToString("N2")</h3>
+                <p class="text-muted">Total Budget</p>
+
+                <h4 class="text-warning">R @Model.Project.ActualSpent.ToString("N2")</h4>
+                <p class="text-muted">Spent</p>
+
+                @{
+                    var percentSpent = Model.Project.Budget > 0 ? (Model.Project.ActualSpent / Model.Project.Budget) * 100 : 0;
+                }
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar @(percentSpent > 90 ? "bg-danger" : percentSpent > 70 ? "bg-warning" : "bg-success")"
+                         style="width: @percentSpent%">
+                        @percentSpent.ToString("F1")%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Documents (@Model.Documents.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Documents.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <li class="list-group-item">
+                                <a href="@doc.FileUrl" target="_blank">
+                                    📄 @doc.FileName
+                                </a>
+                                <br />
+                                <small class="text-muted">@doc.UploadedAt.ToString("dd MMM yyyy")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">No documents uploaded yet.</p>
+                }
+                <a asp-action="ProjectChat" asp-route-projectId="@Model.Project.Id" asp-route-clientId="@clientId" class="btn btn-outline-warning">
+                    💬 Open Project Chat
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

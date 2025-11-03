@@ -1,0 +1,54 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ChatProjectViewModel>
+
+@{
+    ViewData["Title"] = "My Chats";
+    var clientId = ViewBag.ClientId as string;
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>Project Chats</h2>
+        <p class="text-muted">Communicate with your project team</p>
+    </div>
+    <div class="col text-end">
+        <a asp-action="Index" asp-route-clientId="@clientId" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    @if (Model.Any())
+    {
+        @foreach (var chat in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@chat.ProjectName</h5>
+                        @if (chat.UnreadCount > 0)
+                        {
+                            <span class="badge bg-danger mb-2">@chat.UnreadCount unread messages</span>
+                        }
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Last message: @(chat.LastMessageTime == DateTime.MinValue ? "No messages yet" : chat.LastMessageTime.ToString("dd MMM yyyy HH:mm"))
+                            </small>
+                        </p>
+                        <a asp-action="ProjectChat" asp-route-projectId="@chat.ProjectId" asp-route-clientId="@clientId" class="btn btn-primary w-100">
+                            Open Chat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <h4>No chats available</h4>
+                <p>You don't have any active project chats yet.</p>
+                <a asp-action="MyProjects" asp-route-clientId="@clientId" class="btn btn-primary">View My Projects</a>
+            </div>
+        </div>
+    }
+</div>

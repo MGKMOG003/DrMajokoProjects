@@ -1,0 +1,134 @@
+﻿@model List<DrMajokoProjects.Web.Models.ViewModels.ProjectViewModel>
+
+@{
+    ViewData["Title"] = "Manage Projects";
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2>Manage Projects</h2>
+    </div>
+    <div class="col text-end">
+        <a asp-action="CreateProject" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Project
+        </a>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Description</th>
+                                <th>Budget</th>
+                                <th>Spent</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                @foreach (var project in Model)
+                                {
+                                    var percentSpent = project.Budget > 0 ? (project.ActualSpent / project.Budget) * 100 : 0;
+                                    <tr>
+                                        <td><strong>@project.Name</strong></td>
+                                        <td>@(project.Description?.Length > 50 ? project.Description.Substring(0, 50) + "..." : project.Description)</td>
+                                        <td>R @project.Budget.ToString("N2")</td>
+                                        <td>
+                                            <span class="@(percentSpent > 90 ? "text-danger" : percentSpent > 70 ? "text-warning" : "text-success")">
+                                                R @project.ActualSpent.ToString("N2")
+                                            </span>
+                                            <br />
+                                            <small class="text-muted">@percentSpent.ToString("F1")%</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@(project.Status == "Completed" ? "success" : project.Status == "In Progress" ? "primary" : project.Status == "On Hold" ? "warning" : "secondary")">
+                                                @project.Status
+                                            </span>
+                                        </td>
+                                        <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                        <td>@(project.EndDate?.ToString("dd MMM yyyy") ?? "N/A")</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="EditProject" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    Edit
+                                                </a>
+                                                <a asp-controller="Projects" asp-action="Details" asp-route-id="@project.Id" class="btn btn-sm btn-outline-info" title="View Details">
+                                                    View
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="py-4">
+                                            <p class="text-muted mb-3">No projects found.</p>
+                                            <a asp-action="CreateProject" class="btn btn-primary">Create Your First Project</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Statistics -->
+@if (Model.Any())
+{
+    var totalBudget = Model.Sum(p => p.Budget);
+    var totalSpent = Model.Sum(p => p.ActualSpent);
+    var activeProjects = Model.Count(p => p.Status == "In Progress");
+    var completedProjects = Model.Count(p => p.Status == "Completed");
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Projects</h5>
+                    <h2>@Model.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Active Projects</h5>
+                    <h2>@activeProjects</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Budget</h5>
+                    <h2>R @totalBudget.ToString("N0")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Spent</h5>
+                    <h2>R @totalSpent.ToString("N0")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+}

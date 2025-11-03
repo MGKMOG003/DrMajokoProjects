@@ -1,13 +1,12 @@
 # Normalize line endings
 * text=auto
 
-# Treat common binary
+# Treat common binary assets as binary
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.gif binary
 *.pdf binary
-*.zip binary
 
 # Linguist hints (optional)
 *.cs linguist-language=C#
